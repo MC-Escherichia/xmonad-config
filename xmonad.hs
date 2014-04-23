@@ -16,6 +16,7 @@ import XMonad.Layout.Tabbed
 import XMonad.Layout.ThreeColumns
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Util.EZConfig(additionalKeys)
+import XMonad.Util.NamedScratchpad
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
@@ -25,14 +26,14 @@ import qualified Data.Map        as M
 -- The preferred terminal program, which is used in a binding below and by
 -- certain contrib modules.
 --
-myTerminal = "/usr/bin/gnome-terminal"
+myTerminal = "lilyterm"
 
 
 ------------------------------------------------------------------------
 -- Workspaces
 -- The default number of workspaces (virtual screens) and their names.
 --
-myWorkspaces = ["1:term","2:web","3:code","4:vm","5:media"] ++ map show [6..9]
+myWorkspaces = ["1:term","2:web","3:code","4:write","5:media"] ++ map show [6..9]
 
 
 ------------------------------------------------------------------------
@@ -50,17 +51,12 @@ myWorkspaces = ["1:term","2:web","3:code","4:vm","5:media"] ++ map show [6..9]
 -- 'className' and 'resource' are used below.
 --
 myManageHook = composeAll
-    [ className =? "Chromium"       --> doShift "2:web"
-    , className =? "Google-chrome"  --> doShift "2:web"
-    , resource  =? "desktop_window" --> doIgnore
-    , className =? "Galculator"     --> doFloat
-    , className =? "Steam"          --> doFloat
+    [ className =? "Galculator"     --> doFloat
     , className =? "Gimp"           --> doFloat
+    , className =? "Cinelerra"      --> doFloat
     , resource  =? "gpicview"       --> doFloat
     , className =? "MPlayer"        --> doFloat
-    , className =? "VirtualBox"     --> doShift "4:vm"
-    , className =? "Xchat"          --> doShift "5:media"
-    , className =? "stalonetray"    --> doIgnore
+    , className =? "libreoffice"    --> doShift "4:write"
     , isFullscreen --> (doF W.focusDown <+> doFullFloat)]
 
 
@@ -87,8 +83,8 @@ myLayout = avoidStruts (
 -- Colors and borders
 -- Currently based on the ir_black theme.
 --
-myNormalBorderColor  = "#7c7c7c"
-myFocusedBorderColor = "#ffb6b0"
+myNormalBorderColor  = "#3F3F3F"
+myFocusedBorderColor = "#cc9393"
 
 -- Colors for text and backgrounds of each tab when in "Tabbed" layout.
 tabConfig = defaultTheme {
@@ -101,14 +97,18 @@ tabConfig = defaultTheme {
 }
 
 -- Color of current window title in xmobar.
-xmobarTitleColor = "#FFB6B0"
+xmobarTitleColor = "#cc9393"
 
 -- Color of current workspace in xmobar.
-xmobarCurrentWorkspaceColor = "#CEFFAC"
+xmobarCurrentWorkspaceColor = "#F0DFAF"
 
 -- Width of the window border in pixels.
 myBorderWidth = 1
 
+-- Scratchpads ---------------------------------------------------------
+
+scratchpads = [ NS "capture" "org-capture" (title =? "Capture Frame") orgFloat
+              , NS "agenda" "org-agenda" (title =? "Agenda Frame" orgFloat]
 
 ------------------------------------------------------------------------
 -- Key bindings
@@ -118,7 +118,7 @@ myBorderWidth = 1
 -- ("right alt"), which does not conflict with emacs keybindings. The
 -- "windows key" is usually mod4Mask.
 --
-myModMask = mod1Mask
+myModMask = mod4Mask
 
 myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
   ----------------------------------------------------------------------
@@ -142,7 +142,7 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
   -- After pressing this key binding, click a window, or draw a rectangle with
   -- the mouse.
   , ((modMask .|. shiftMask, xK_p),
-     spawn "select-screenshot")
+     spawn "seleyegct-screenshot")
 
   -- Take full screenshot in multi-head mode.
   -- That is, take a screenshot of everything you see.
@@ -182,6 +182,17 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
   , ((0, 0x1008FF2C),
      spawn "eject -T")
 
+  -- Launch zeal (help menu)
+  ,  ((mod4Mask .|. shiftMask, xK_z),
+     spawn "zeal")
+
+  -- launch chromium
+  , ((mod4Mask .|. shiftMask, xK_semicolon),
+      spawn "firefox")
+
+  --launch emacs editor
+  , ((mod4Mask .|. shiftMask, xK_apostrophe),
+      spawn "emacsclient -c")
   --------------------------------------------------------------------
   -- "Standard" xmonad key bindings
   --
@@ -273,11 +284,11 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
   -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
   -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
   [((m .|. modMask, key), screenWorkspace sc >>= flip whenJust (windows . f))
-      | (key, sc) <- zip [xK_w, xK_e, xK_r] [0..]
+      | (key, sc) <- zip [xK_e, xK_w,  xK_r] [0..]
       , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
 
 
-------------------------------------------------------------------------
+-----------------------------------------------------------------------
 -- Mouse bindings
 --
 -- Focus rules
